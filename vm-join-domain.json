@@ -4,7 +4,7 @@
   "resources": [
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
-      "apiVersion": "2021-07-01", // Updated API version to the most recent
+      "apiVersion": "2021-07-01", // Updated API version to the most recent in use
       "name": "[concat(parameters('dnsLabelPrefix'), '/joindomain')]",
       "location": "[parameters('location')]",
       "dependsOn": [
