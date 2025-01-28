@@ -1,0 +1,87 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#", // Updated schema for better validation and IntelliSense support
+  "contentVersion": "1.0.0.0", // Added content version for version control of the template
+  "resources": [
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "apiVersion": "2021-07-01", // Updated API version to the most recent
+      "name": "[concat(parameters('dnsLabelPrefix'), '/joindomain')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('dnsLabelPrefix'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Compute",
+        "type": "JsonADDomainExtension",
+        "typeHandlerVersion": "1.3",
+        "autoUpgradeMinorVersion": true,
+        "settings": {
+          "Name": "[parameters('domainToJoin')]",
+          "OUPath": "[parameters('ouPath')]",
+          "User": "[concat(parameters('domainToJoin'), '\\', parameters('domainUsername'))]",
+          "Restart": "true",
+          "Options": "[parameters('domainJoinOptions')]"
+        },
+        "protectedSettings": {
+          "Password": "[parameters('domainPassword')]"
+        }
+      }
+    }
+  ],
+  "parameters": {
+    "dnsLabelPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "The DNS label prefix for the virtual machine."
+      }
+    },
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "The location where the resources will be deployed."
+      }
+    },
+    "domainToJoin": {
+      "type": "string",
+      "metadata": {
+        "description": "The Active Directory domain to join."
+      }
+    },
+    "ouPath": {
+      "type": "string",
+      "metadata": {
+        "description": "The Organizational Unit path in the Active Directory."
+      }
+    },
+    "domainUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "The username for the domain account."
+      }
+    },
+    "domainPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The password for the domain account."
+      }
+    },
+    "domainJoinOptions": {
+      "type": "string",
+      "metadata": {
+        "description": "Additional options for the domain join."
+      }
+    }
+  },
+  "outputs": {
+    "domainJoinStatus": {
+      "type": "string",
+      "value": "[reference(concat(parameters('dnsLabelPrefix'), '/joindomain')).statuses[0].message]",
+      "description": "The status of the domain join operation." // Added output to provide the status of the domain join operation
+    },
+    "domainJoinError": {
+      "type": "string",
+      "value": "[if(contains(reference(concat(parameters('dnsLabelPrefix'), '/joindomain')).statuses[0].message, 'error'), reference(concat(parameters('dnsLabelPrefix'), '/joindomain')).statuses[0].message, 'No errors')]",
+      "description": "Details of any errors encountered during the domain join operation." // Added output to provide error details if the domain join operation fails
+    }
+  }
+}
